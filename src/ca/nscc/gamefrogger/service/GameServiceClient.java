@@ -87,42 +87,10 @@ public class GameServiceClient implements Runnable {
 			//case collision - remove frog life
 			if (this.game.getMyVehicle().getRectangle().intersects(this.game.getMyFrogger().getRectangle())) {
 				System.out.println("Boom!");
-				removeLife(this.game.getMyFrogger());
+				this.game.removeLife(this.game.getMyFrogger());
 			}
-			
-			//case player complete crossing - 1: stop cars, 2: p1 stop, 3: p2 start
-			if( this.game.getMyFrogger().getLife() > 0 && this.game.getMyFrogger().getY() <= 180) {
-				if(this.game.getP1().isPlaying()) {
-					this.game.getP1().setConcluded(true);
-					this.game.getP1().setPlaying(false);
-				} else if( this.game.getP2().isPlaying()) {
-					this.game.getP2().setConcluded(true);
-					this.game.getP2().setPlaying(false);
-				} 			
-			}
-
 		}
 	}
 
-	private void removeLife(Frogger frog) {
-		frog.setX(275);
-		frog.setY(740);
-		frog.getRectangle().setLocation(50, 50);
-		this.game.getFroggerLabel().setLocation(frog.getX(), frog.getY());
-		frog.setLife(frog.getLife() - 1);
-
-		switch (frog.getLife()) {
-		case 2:
-			this.game.getListLifeFrog().get(2).setVisible(false);
-			break;
-		case 1:
-			this.game.getListLifeFrog().get(1).setVisible(false);
-			break;
-		case 0:
-			this.game.getListLifeFrog().get(0).setVisible(false);
-			this.game.stop();
-			break;
-		}
-	}
 
 }

@@ -19,9 +19,6 @@ public class GameController {
 	final static int CLIENT_PORT = 5656;
 	final static int SERVER_PORT = 5556;
 
-	private GameFrogger game;
-	private int count = 240;
-
 	private Socket s;
 
 	// Initialize data stream to send data out
@@ -33,6 +30,7 @@ public class GameController {
 	public GameController(GameFrogger game) {
 		try {
 			ServerSocket client = new ServerSocket(CLIENT_PORT);
+			s = new Socket("localhost", SERVER_PORT);
 
 			Thread t1 = new Thread(new Runnable() {
 				public void run() {
@@ -63,8 +61,6 @@ public class GameController {
 	}
 
 	public void addPlayer(Player p1, Player p2) throws UnknownHostException, IOException {
-		s = new Socket("localhost", SERVER_PORT);
-
 		outstream = s.getOutputStream();
 		out = new PrintWriter(outstream);
 
@@ -92,17 +88,14 @@ public class GameController {
 			direction = "RIGHT";
 		}
 
-		s = new Socket("localhost", SERVER_PORT);
 		outstream = s.getOutputStream();
 		out = new PrintWriter(outstream);
 
-		String command = "MOVE_FROG " + frogT.getX() + " " + frogT.getY() + " " + frogT.getHeight() + " " + direction
-				+ "\n";
+		String command = "MOVE_FROG " + frogT.getX() + " " + frogT.getY() + " " + frogT.getHeight() + " " + direction + "\n";
 		System.out.println("Sending: " + command);
 		out.println(command);
 		out.flush();
 
-		s.close();
 	}
 
 	public void moveVehicle(Vehicle vehicleT, Frogger frogT) throws UnknownHostException, IOException {		
@@ -110,37 +103,38 @@ public class GameController {
 		outstream = s.getOutputStream();
 		out = new PrintWriter(outstream);
 
-		String command = "MOVE_VEHICLE " + vehicleT.getFilename() + " " + vehicleT.getVelocity() + " " + vehicleT.getIncrease() + " " + vehicleT.getVehicleLabel().getWidth() + " "
-				+ vehicleT.getX() + " " + vehicleT.getY() + " " + frogT.getX() + " " + frogT.getY() + "\n";
+		String command = "MOVE_VEHICLE " + vehicleT.getFilename() + " " + vehicleT.getIncrease() + " " + vehicleT.getVehicleLabel().getWidth() + " "
+				+ vehicleT.getX() + " " + vehicleT.getY() + "\n";
 		System.out.println("Sending: " + command);
 		out.println(command);
 		out.flush();
 
-		s.close();
 	}
-	
-	public void updateScore(Player player) throws UnknownHostException, IOException {
-		int score = (count * 100 ) / 240;
-		
-		s = new Socket("localhost", SERVER_PORT);
-		outstream = s.getOutputStream();
-		out = new PrintWriter(outstream);
-
-		String command = "UPDATE_SCORE " + player.getId().intValue() + " " + score  +"\n";
-		System.out.println("Sending: " + command);
-		out.println(command);
-		out.flush();
-
-		s.close();
-	}
-
 
 	public void stopCars() throws UnknownHostException, IOException {
-		s = new Socket("localhost", SERVER_PORT);
+		outstream = s.getOutputStream();
+		out = new PrintWriter(outstream);
+		String command = "STOP_CARS \n";
+		
+		System.out.println("Sending: " + command);
+		out.println(command);
+		out.flush();
+		
+		for (Thread t : Thread.getAllStackTraces().keySet()) {
+			if(t.getName().equals("myService")) {
+				t.stop();
+				s.close();
+			}
+		}		
+	}
+	
+	public void updateScore(int count, int id) throws UnknownHostException, IOException {		
+		int score = (count * 100 ) / 240;
+		
 		outstream = s.getOutputStream();
 		out = new PrintWriter(outstream);
 
-		String command = "STOP_CARS \n";
+		String command = "UPDATE_SCORE " + id + " " + score  +"\n";
 		System.out.println("Sending: " + command);
 		out.println(command);
 		out.flush();

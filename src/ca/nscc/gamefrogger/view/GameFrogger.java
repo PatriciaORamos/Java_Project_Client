@@ -35,7 +35,8 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 	private Player p1, p2;
 	private Timer timer;
 
-	private int count = 10;
+	private int count = 0;
+	private int startTimer = 10;
 
 	private ArrayList<JLabel> listLifeFrog;
 	private String[] imageVehicle = { "/truckRight.png", "/carLeft.png" };
@@ -167,6 +168,8 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 	}
 
 	public JPanel playGame() {
+		
+		count = startTimer;
 		panel_game = new JPanel();
 
 		playerLabel = new JLabel();
@@ -259,16 +262,16 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 
-		// case of frog die or time finish - stop car
-		if (getCount() > 0) {
-			// GAME 2
+		// case of time finish - no move frog
+		if (getCount() > 0 && getMyFrogger().getLife() > 0) {
+			// GAME 2 - move frog by server
 			try {
 				controller.moveFrog(getMyFrogger(), e);
 				froggerLabel.setLocation(getMyFrogger().getX(), getMyFrogger().getY());
-				if (getP1().isConcluded()) {
-					getP2().setPlaying(true);
-					getPlayerLabel().setText(getP2().getName());
-					resetGame();
+				
+				//update score
+				if(getMyFrogger().getY() <= 180) {
+					updateScore();
 				}
 
 			} catch (UnknownHostException e1) {
@@ -302,6 +305,7 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 		getP1().setPlaying(true);
 
 		try {
+			//GAME 2 - add user by server
 			controller.addPlayer(getP1(), getP2());
 			add(playGame());
 			getContentPane().addKeyListener(this);
@@ -312,16 +316,16 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 				public void actionPerformed(ActionEvent e) {
 					if (getCount() <= 0) {
 						getTimerLabel().setText("STOP");
-						((Timer) e.getSource()).stop();
-						stop();
-						resetGame();
+						stopCars();
+						messagePlayerGameOver();
+						updatePlayers();												
 					} else {
 						getTimerLabel().setText(Integer.toString(getCount()));
 						setCount(getCount() - 1);
 					}
 				}
 			});
-			timer.start();
+//			timer.start();
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 		} catch (IOException e1) {
@@ -330,38 +334,101 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 
 	}
 
-	public void stop() {
-		timer.stop();
-		if(getP1().isPlaying()) {
-			JOptionPane.showMessageDialog(this, getP1().getName() + " time finished! Now " + getP2().getName() + " will play." );
-			getMyFrogger().setLife(0);
+	public void stopCars() {		
+		try {
+			//GAME 2 - stop thread of vehicle by server
+			controller.stopCars();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		
+	}
+	
+	public void messagePlayerGameOver() {
+		String txt = "";
+		if(count == 0) txt = "time"; else txt = "life";
+		
+		if(getP1().isPlaying()) {			
+			JOptionPane.showMessageDialog(null, "*** " + getP1().getName() + " *** your "+ txt +" finished.\n" 
+					+"Now *** " + getP2().getName() + " *** will play");			
 		} else if( getP2().isPlaying()) {
-			JOptionPane.showMessageDialog(this, getP2().getName() + " time finished!" );
+			JOptionPane.showMessageDialog(this, "*** " + getP2().getName() + " *** your "+ txt +" finished!" );
+		}
+		
+	}
+	
+	public void removeLife(Frogger frog) {
+		getMyFrogger().setLife(frog.getLife() - 1);
+		switch (getMyFrogger().getLife()) {
+		case 2:
+			getListLifeFrog().get(2).setVisible(false);
+			break;
+		case 1:
+			getListLifeFrog().get(1).setVisible(false);
+			break;
+		case 0:
+			getListLifeFrog().get(0).setVisible(false);
+			stopCars();
+			messagePlayerGameOver();
+			updatePlayers();
+			break;
 		}
 	}
-
-	public void showGameOver() {
-		ImageIcon gameOverImage = new ImageIcon(getClass().getResource("/gameover.png"));
-		int playAgain = JOptionPane.showConfirmDialog(this, "Do you like play again?", "GAME OVER",
-				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, gameOverImage);
-		if (playAgain == 1) {
+	
+	public void updatePlayers() {
+		if(getP1().isPlaying()) {
+			getP1().setPlaying(false);
+			getP2().setPlaying(true);
+			getPlayerLabel().setText(getP2().getName());
 			resetGame();
+		} else {
+			getP2().setPlaying(false);
+			stopCars();
 		}
-
 	}
-
-	public void showDialogWinner() {
-//		controller.getScore();
-//		ImageIcon winnerImage = new ImageIcon( getClass().getResource( "/winner.png" ) );
-//		playAgain = JOptionPane.showConfirmDialog(this, "Your score is: " + controller.getScore() + "\nDo you like play again?", "YOU WINNER", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, winnerImage);
-//		replay();
-	}
+	
 
 	public void resetGame() {
+		count = startTimer;
 		getMyFrogger().setLife(3);
 		getMyFrogger().setX(270);
 		getMyFrogger().setY(740);
 		froggerLabel.setLocation(getMyFrogger().getX(), getMyFrogger().getY());
+		showFrogLife();
+		
+		//GAME 2 
+		try {
+			controller.moveVehicle(getMyVehicle(), getMyFrogger());
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
+	
+	public void showFrogLife() {
+		for (JLabel frogLife : listLifeFrog) {
+			frogLife.setVisible(true);
+		}
+	}
+	
+	public void updateScore() {
+		int id = 0;
+		try {
+			if(getP1().isPlaying()) {
+				id = getP1().getId().intValue();
+			} else if (getP2().isPlaying()) {
+				id = getP2().getId().intValue();
+			}
+			controller.updateScore(count, id);
+			
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 
 }
