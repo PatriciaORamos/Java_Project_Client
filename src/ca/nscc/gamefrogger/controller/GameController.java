@@ -129,17 +129,15 @@ public class GameController {
 	}
 	
 	public void updateScore(int count, int id) throws UnknownHostException, IOException {		
-		int score = (count * 100 ) / 240;
 		
 		outstream = s.getOutputStream();
 		out = new PrintWriter(outstream);
 
-		String command = "UPDATE_SCORE " + id + " " + score  +"\n";
+		String command = "UPDATE_SCORE " + id + " " + count  +"\n";
 		System.out.println("Sending: " + command);
 		out.println(command);
 		out.flush();
 
-		s.close();
 	}
 	
 

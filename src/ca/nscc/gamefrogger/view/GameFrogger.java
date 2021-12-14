@@ -36,7 +36,7 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 	private Timer timer;
 
 	private int count = 0;
-	private int startTimer = 10;
+	private int startTimer = 100;
 
 	private ArrayList<JLabel> listLifeFrog;
 	private String[] imageVehicle = { "/truckRight.png", "/carLeft.png" };
@@ -48,93 +48,29 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 	private JButton btnOK;
 	private JLabel playerLabel, timerLabel, lifeLabel, froggerLabel, vehicleLabel;
 
-	public JTextField getTxtName() {
-		return txtName;
-	}
+	public JTextField getTxtName() {return txtName;}
+	public JTextField getTxtName2() {return txtName2;}
+	public JPanel getPanel_welcome() {return panel_welcome;}
+	public JLabel getPlayerLabel() {return playerLabel;}
+	public JLabel getTimerLabel() {return timerLabel;}
+	public JLabel getFroggerLabel() {return froggerLabel;}
+	public Frogger getMyFrogger() {return myFrogger;}
+	public Vehicle getMyVehicle() {return myVehicle;}
+	public ArrayList<JLabel> getListLifeFrog() {return listLifeFrog;}
+	public ArrayList<Vehicle> getListVehicles() {return listVehicles;}
+	public ArrayList<JLabel> getListVehiclesLabel() {return listVehiclesLabel;}
+	public Player getP1() {	return p1;}
+	public Player getP2() {	return p2;}
+	public int getCount() {	return count;}
 
-	public JTextField getTxtName2() {
-		return txtName2;
-	}
-
-	public JPanel getPanel_welcome() {
-		return panel_welcome;
-	}
-
-	public JLabel getPlayerLabel() {
-		return playerLabel;
-	}
-
-	public JLabel getTimerLabel() {
-		return timerLabel;
-	}
-
-	public JLabel getFroggerLabel() {
-		return froggerLabel;
-	}
-
-	public Frogger getMyFrogger() {
-		return myFrogger;
-	}
-
-	public Vehicle getMyVehicle() {
-		return myVehicle;
-	}
-
-	public ArrayList<JLabel> getListLifeFrog() {
-		return listLifeFrog;
-	}
-
-	public ArrayList<Vehicle> getListVehicles() {
-		return listVehicles;
-	}
-
-	public ArrayList<JLabel> getListVehiclesLabel() {
-		return listVehiclesLabel;
-	}
-
-	public Player getP1() {
-		return p1;
-	}
-
-	public Player getP2() {
-		return p2;
-	}
-
-	public int getCount() {
-		return count;
-	}
-
-	public void setCount(int count) {
-		this.count = count;
-	}
-
-	public void setP1(Player p1) {
-		this.p1 = p1;
-	}
-
-	public void setP2(Player p2) {
-		this.p2 = p2;
-	}
-
-	public void setMyFrogger(Frogger myFrogger) {
-		this.myFrogger = myFrogger;
-	}
-
-	public void setMyVehicle(Vehicle myVehicle) {
-		this.myVehicle = myVehicle;
-	}
-
-	public void setListLifeFrog(ArrayList<JLabel> listLifeFrog) {
-		this.listLifeFrog = listLifeFrog;
-	}
-
-	public void setListVehiclesLabel(ArrayList<JLabel> vehiclesLabel) {
-		this.listVehiclesLabel = vehiclesLabel;
-	}
-
-	public void setListVehicles(ArrayList<Vehicle> listVehicles) {
-		this.listVehicles = listVehicles;
-	}
+	public void setCount(int count) {this.count = count;}
+	public void setP1(Player p1) {this.p1 = p1;}
+	public void setP2(Player p2) {this.p2 = p2;}
+	public void setMyFrogger(Frogger myFrogger) {this.myFrogger = myFrogger;}
+	public void setMyVehicle(Vehicle myVehicle) {this.myVehicle = myVehicle;}
+	public void setListLifeFrog(ArrayList<JLabel> listLifeFrog) {this.listLifeFrog = listLifeFrog;}
+	public void setListVehiclesLabel(ArrayList<JLabel> vehiclesLabel) {this.listVehiclesLabel = vehiclesLabel;}
+	public void setListVehicles(ArrayList<Vehicle> listVehicles) {this.listVehicles = listVehicles;}
 
 	private Container content;
 
@@ -261,8 +197,7 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-
-		// case of time finish - no move frog
+		// case of time finish or count zero - no move frog
 		if (getCount() > 0 && getMyFrogger().getLife() > 0) {
 			// GAME 2 - move frog by server
 			try {
@@ -271,7 +206,10 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 				
 				//update score
 				if(getMyFrogger().getY() <= 180) {
-					updateScore();
+					timer.stop();
+					updateScore();					
+					messageCompleteCrossing();
+					updatePlayers();
 				}
 
 			} catch (UnknownHostException e1) {
@@ -281,6 +219,7 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 			}
 		}
 	}
+
 
 	@Override
 	public void keyReleased(KeyEvent e) {
@@ -325,7 +264,7 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 					}
 				}
 			});
-//			timer.start();
+			timer.start();
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 		} catch (IOException e1) {
@@ -345,18 +284,40 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 		}		
 	}
 	
+	private void messageCompleteCrossing() {
+		String message = "";
+		if(getP1().isPlaying()) message = "*** " + getP1().getName() + " *** \nCongrats! You completed the crossing.\nNow *** " + getP2().getName() + " *** will play";
+		else message = "*** " + getP2().getName() + " *** \nCongrats! You completed the crossing." ;
+		JOptionPane.showMessageDialog(null, message);
+	}
+	
 	public void messagePlayerGameOver() {
 		String txt = "";
-		if(count == 0) txt = "time"; else txt = "life";
-		
+		if(count == 0) txt = "time"; else txt = "life";		
 		if(getP1().isPlaying()) {			
 			JOptionPane.showMessageDialog(null, "*** " + getP1().getName() + " *** your "+ txt +" finished.\n" 
 					+"Now *** " + getP2().getName() + " *** will play");			
 		} else if( getP2().isPlaying()) {
 			JOptionPane.showMessageDialog(this, "*** " + getP2().getName() + " *** your "+ txt +" finished!" );
-		}
+		}		
+	}
+	
+	private void messageScore() {
+		stopCars();
+		ImageIcon winnerImage = new ImageIcon( getClass().getResource( "/winner.png" ) );		
+		int p1Score = getP1().getScore();
+		int p2Score = getP2().getScore();
+		String message = " ";
+		if (p1Score > p2Score) message = "The champion is " +getP1().getName() + "\n Your score is: " + p1Score + " vs " + p2Score +" of the " + getP2().getName();
+		else if (p2Score > p1Score) message = "The champion is " + getP2().getName() + "\n Your score is: " + p2Score + " vs " + p1Score +" of the " + getP2().getName();
+		else message = "We had a tie! \n"+ getP1().getName() + " = " + p1Score + " \n" + getP2().getName() + " = " + p2Score;
+		
+		JOptionPane.showMessageDialog(null, message, "SCORE", JOptionPane.INFORMATION_MESSAGE, winnerImage);
 		
 	}
+	
+	
+
 	
 	public void removeLife(Frogger frog) {
 		getMyFrogger().setLife(frog.getLife() - 1);
@@ -382,12 +343,15 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 			getP2().setPlaying(true);
 			getPlayerLabel().setText(getP2().getName());
 			resetGame();
-		} else {
+		} else if (getP2().isPlaying()) {			
 			getP2().setPlaying(false);
-			stopCars();
+			stopCars();			
+		} else {
+			timer.stop();
+			messageScore(); 
 		}
 	}
-	
+
 
 	public void resetGame() {
 		count = startTimer;
@@ -396,6 +360,7 @@ public class GameFrogger extends JFrame implements ActionListener, KeyListener {
 		getMyFrogger().setY(740);
 		froggerLabel.setLocation(getMyFrogger().getX(), getMyFrogger().getY());
 		showFrogLife();
+		timer.start();
 		
 		//GAME 2 
 		try {

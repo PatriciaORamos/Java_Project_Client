@@ -89,6 +89,15 @@ public class GameServiceClient implements Runnable {
 				System.out.println("Boom!");
 				this.game.removeLife(this.game.getMyFrogger());
 			}
+		} else if (command.equals("SCORE_PLAYER")) {
+			int score = in.nextInt();
+			int id = in.nextInt();
+			
+			if(this.game.getP1().getId().intValue() == id) {
+				this.game.getP1().setScore(score);
+			} else if (this.game.getP2().getId().intValue() == id ) {
+				this.game.getP2().setScore(score);
+			}
 		}
 	}
 
